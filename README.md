@@ -1,5 +1,8 @@
 # aerosizing — aircraft performance/sizing and rocket trajectory tool
 
+**Try it in the browser, no install:** https://yousuf6273.github.io/aero-sizing-tool/ — a form-based
+frontend that runs this exact package in the browser (Pyodide). Pick a preset, edit numbers, press Run.
+
 A small, tested Python package for **fixed-wing aircraft performance and preliminary sizing** and
 **rocket performance and trajectory**, sharing one standard-atmosphere and numerics layer.
 Built as an engineering portfolio project: every equation is the standard textbook formulation
