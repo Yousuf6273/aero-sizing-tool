@@ -14,15 +14,11 @@ const FIELDS = {
       ["e", "Oswald efficiency e", "–", 0.75, "Span efficiency for induced drag, 0.7–0.85 for straight wings."],
     ]],
     ["Propulsion & fuel", [
-      ["propulsion", "Engine type", "", "prop", "Piston-propeller uses power; jet uses thrust. Switching changes the fields below.", {select: [["prop", "Piston + propeller"], ["jet", "Jet / turbofan"]]}],
-      ["power_kW", "Engine shaft power (sea level)", "kW", 134, "Rated shaft power. 1 hp = 0.7457 kW. Piston lapse with altitude is applied automatically.", {showIf: ["propulsion", "prop"]}],
-      ["eta_p", "Propeller efficiency", "–", 0.78, "Assumed constant. Cruise 0.75–0.85; fixed-pitch props do worse in climb (~0.6).", {showIf: ["propulsion", "prop"]}],
-      ["sfc_kg_per_kWh", "Specific fuel consumption", "kg/kWh", 0.274, "Brake SFC. 0.45 lb/(hp·h) = 0.274 kg/kWh (typical aviation piston).", {showIf: ["propulsion", "prop"]}],
-      ["thrust_kN", "Total sea-level static thrust", "kN", 186, "All engines combined. 1 lbf = 4.448 N, so 1000 lbf = 4.45 kN.", {showIf: ["propulsion", "jet"]}],
-      ["lapse_m", "Thrust lapse exponent", "–", 0.8, "Thrust falls as (density ratio)^m with altitude. 1.0 is Anderson's turbojet assumption; 0.7–0.8 suits low-bypass turbofans.", {showIf: ["propulsion", "jet"]}],
-      ["tsfc_per_h", "Thrust-specific fuel consumption", "1/h", 0.67, "Quoted as lb of fuel per lbf of thrust per hour. Dry turbofan 0.6–0.8; afterburning 1.9–2.5.", {showIf: ["propulsion", "jet"]}],
-      ["fuel_mass", "Usable fuel", "kg", 144, "Avgas 0.72 kg/L, jet fuel 0.80 kg/L. Used for Breguet range/endurance.", {showIf: null}],
-      ["h_cruise", "Cruise altitude", "m", 2438, "Altitude for the cruise-altitude results (2438 m = 8000 ft).", {showIf: null}],
+      ["power_kW", "Engine shaft power (sea level)", "kW", 134, "Rated shaft power. 1 hp = 0.7457 kW. Piston lapse with altitude is applied automatically."],
+      ["eta_p", "Propeller efficiency", "–", 0.78, "Assumed constant. Cruise 0.75–0.85; fixed-pitch props do worse in climb (~0.6)."],
+      ["sfc_kg_per_kWh", "Specific fuel consumption", "kg/kWh", 0.274, "Brake SFC. 0.45 lb/(hp·h) = 0.274 kg/kWh (typical aviation piston)."],
+      ["fuel_mass", "Usable fuel", "kg", 144, "Avgas 0.72 kg/L. Used for Breguet range/endurance."],
+      ["h_cruise", "Cruise altitude", "m", 2438, "Altitude for the cruise-altitude results (2438 m = 8000 ft)."],
     ]],
   ],
   sizing: [
@@ -81,14 +77,10 @@ const FIELDS = {
 
 const PRESETS = {
   aircraft: {
-    "Cessna 172S-like": {propulsion: "prop", name: "Cessna 172S-like", mass: 1157, S: 16.17, span: 11.0, CL_max: 1.6, CD0: 0.033, e: 0.75, power_kW: 134, eta_p: 0.78, sfc_kg_per_kWh: 0.274, fuel_mass: 144, h_cruise: 2438},
-    "Piper PA-28-181 Archer-like": {propulsion: "prop", name: "PA-28 Archer-like", mass: 1157, S: 15.8, span: 10.8, CL_max: 1.5, CD0: 0.034, e: 0.76, power_kW: 134, eta_p: 0.78, sfc_kg_per_kWh: 0.274, fuel_mass: 130, h_cruise: 2438},
-    "Motor glider (Stemme-like)": {propulsion: "prop", name: "motor glider", mass: 850, S: 18.7, span: 23.0, CL_max: 1.5, CD0: 0.016, e: 0.85, power_kW: 85, eta_p: 0.8, sfc_kg_per_kWh: 0.29, fuel_mass: 70, h_cruise: 2000},
-    "Small gasoline UAV": {propulsion: "prop", name: "survey UAV", mass: 13.2, S: 0.77, span: 2.63, CL_max: 1.4, CD0: 0.035, e: 0.8, power_kW: 1.0, eta_p: 0.7, sfc_kg_per_kWh: 0.54, fuel_mass: 1.3, h_cruise: 1000},
-    "F-14A Tomcat — military thrust": {propulsion: "jet", name: "F-14A Tomcat (mil thrust)", mass: 27200, S: 52.49, span: 19.55, CL_max: 1.6, CD0: 0.024, e: 0.75, thrust_kN: 110, lapse_m: 0.8, tsfc_per_h: 0.67, fuel_mass: 7348, h_cruise: 10000},
-    "F-14A Tomcat — full afterburner": {propulsion: "jet", name: "F-14A Tomcat (afterburner)", mass: 27200, S: 52.49, span: 19.55, CL_max: 1.6, CD0: 0.024, e: 0.75, thrust_kN: 186, lapse_m: 0.8, tsfc_per_h: 2.5, fuel_mass: 7348, h_cruise: 10000},
-    "F-14D Super Tomcat — afterburner": {propulsion: "jet", name: "F-14D Tomcat (F110, AB)", mass: 28000, S: 52.49, span: 19.55, CL_max: 1.6, CD0: 0.024, e: 0.75, thrust_kN: 247, lapse_m: 0.8, tsfc_per_h: 1.9, fuel_mass: 7348, h_cruise: 10000},
-    "Airliner-like twin (A320-ish)": {propulsion: "jet", name: "narrow-body twin", mass: 68000, S: 122.6, span: 34.1, CL_max: 1.5, CD0: 0.020, e: 0.80, thrust_kN: 240, lapse_m: 0.8, tsfc_per_h: 0.60, fuel_mass: 15000, h_cruise: 11000},
+    "Cessna 172S-like": {name: "Cessna 172S-like", mass: 1157, S: 16.17, span: 11.0, CL_max: 1.6, CD0: 0.033, e: 0.75, power_kW: 134, eta_p: 0.78, sfc_kg_per_kWh: 0.274, fuel_mass: 144, h_cruise: 2438},
+    "Piper PA-28-181 Archer-like": {name: "PA-28 Archer-like", mass: 1157, S: 15.8, span: 10.8, CL_max: 1.5, CD0: 0.034, e: 0.76, power_kW: 134, eta_p: 0.78, sfc_kg_per_kWh: 0.274, fuel_mass: 130, h_cruise: 2438},
+    "Motor glider (Stemme-like)": {name: "motor glider", mass: 850, S: 18.7, span: 23.0, CL_max: 1.5, CD0: 0.016, e: 0.85, power_kW: 85, eta_p: 0.8, sfc_kg_per_kWh: 0.29, fuel_mass: 70, h_cruise: 2000},
+    "Small gasoline UAV": {name: "survey UAV", mass: 13.2, S: 0.77, span: 2.63, CL_max: 1.4, CD0: 0.035, e: 0.8, power_kW: 1.0, eta_p: 0.7, sfc_kg_per_kWh: 0.54, fuel_mass: 1.3, h_cruise: 1000},
   },
   sizing: {
     "Survey UAV (4 kg, 150 km)": {range_km: 150, payload: 4, V_cruise: 30, h_cruise: 1000, V_stall: 14, RC: 4, S_G: 60, h_ceiling: 4000, loiter_min: 30, CD0: 0.035, AR: 9, e: 0.8, CL_max: 1.4, CL_max_TO: 1.6, eta_p: 0.7, eta_p_TO: 0.55, sfc_kg_per_kWh: 0.54, empty_frac: 0.6},
@@ -130,13 +122,10 @@ function buildForm(tab) {
       const short = tip ? tip.split(". ")[0].replace(/\.$/, "") : "";
       const u = unit && unit !== "–" ? unit : "";
       row.innerHTML = `<label>${label}<small>${[u, short].filter(Boolean).join(" · ")}</small></label>${input}`;
-      if (extra && extra.showIf) { row.dataset.showIf = extra.showIf[0]; row.dataset.showVal = extra.showIf[1]; }
       fs.appendChild(row);
     }
     form.appendChild(fs);
   }
-  form.addEventListener("change", () => applyVisibility(tab));
-  applyVisibility(tab);
   const box = document.querySelector(`.presets[data-for="${tab}"]`);
   box.innerHTML = "";
   for (const name of Object.keys(PRESETS[tab])) {
@@ -146,17 +135,9 @@ function buildForm(tab) {
     box.appendChild(b);
   }
 }
-function applyVisibility(tab) {
-  const form = document.getElementById("form-" + tab);
-  for (const row of form.querySelectorAll(".row[data-show-if]")) {
-    const ctrl = form.elements[row.dataset.showIf];
-    row.hidden = !ctrl || ctrl.value !== row.dataset.showVal;
-  }
-}
 function applyPreset(tab, values) {
   const form = document.getElementById("form-" + tab);
   for (const [k, v] of Object.entries(values)) { const el = form.elements[k]; if (el) el.value = v; }
-  applyVisibility(tab);
 }
 function readForm(tab) {
   const form = document.getElementById("form-" + tab);
@@ -221,8 +202,7 @@ async function run(tab) {
     const res = JSON.parse(fn(JSON.stringify(params)));
     fn.destroy && fn.destroy();
     let html = `<h2>Results</h2><table>${res.rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2] || ""}</td></tr>`).join("")}</table>`;
-    if (res.meta) html += `<div class="meta">${res.meta}</div>`;
-    for (const w of (res.warnings || [])) html += `<div class="warn">⚠︎ ${w}</div>`;
+    if (res.meta) html += res.meta.includes("valid") || res.meta.includes("below") ? `<div class="warn">${res.meta}</div>` : `<div class="meta">${res.meta}</div>`;
     html += `<div class="figs">${res.figs.map(f => `<img src="${f}" alt="plot">`).join("")}</div>`;
     out.innerHTML = html;
   } catch (e) {

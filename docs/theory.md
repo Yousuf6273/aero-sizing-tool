@@ -63,11 +63,6 @@ Service ceiling: altitude where max R/C = 0.508 m/s (100 ft/min) [AndIF §6.10]
 Max speed: root of P_A(rho) − P_R(V, rho) = 0 (scipy brentq)
 ```
 
-Jet/turbofan thrust lapse: `T/T_SL = σ^m`, with `m = 1` for turbojets [AndIF §6.7] and
-`m ≈ 0.7–0.8` commonly used for low-bypass turbofans. Jet aircraft cruise for **range** at
-max `C_L^0.5/C_D` and loiter for **endurance** at `(L/D)max` — the opposite of propeller
-aircraft [AndIF §6.12–6.13].
-
 Piston-engine power lapse with density ratio σ [Gagg & Ferrar correlation as given in Raymer
 Ch. 13 and Gudmundsson Ch. 7]: `P/P_SL = 1.132 σ − 0.132`. Jet thrust lapse `T/T_SL = σ` [AndIF §6.7].
 
@@ -82,8 +77,6 @@ Jet:   R = 2 sqrt(2/(rho S)) (1/c_t) (C_L^1/2/C_D) (W0^1/2 − W1^1/2)
 ```
 
 Assumptions: constant η_p, c_p, altitude and C_L over the segment (classic Breguet).
-For transonic and supersonic aircraft the incompressible polar has no wave drag, so top
-speed, climb rate and ceiling are **over-predicted**; the tool warns above Mach 0.7.
 Validity: light subsonic aircraft; propeller efficiency treated constant, which over-predicts
 climb and ceiling for fixed-pitch propellers (discussed in the Cessna 172 example).
 

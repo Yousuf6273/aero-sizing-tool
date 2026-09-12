@@ -23,7 +23,7 @@ verifiable models rather than black-box CFD or optimisation.
 |---|---|---|
 | `atmosphere.py` | ISA / U.S. Standard Atmosphere 1976, 0–86 km: T, p, ρ, a, μ; geometric↔geopotential | NASA-TM-X-74335 eqs. 18, 23–25, 33a/b, 51 |
 | `aerodynamics.py` | Parabolic drag polar, (L/D)max, min-power C_L, lifting-line lift-curve slope, Oswald estimate, L/D vs airspeed | Anderson *Intro. to Flight* §5.14–5.15; Raymer eq. 12.48 |
-| `aircraft_performance.py` | Thrust/power required vs available (piston-prop with Gagg–Ferrar lapse, electric, turbojet/turbofan with σ^m lapse), stall speed, max speed (brentq on an adaptive bracket), rate of climb, service/absolute ceiling, Breguet range & endurance (prop and jet) | Anderson *Intro. to Flight* Ch. 6; *Aircraft Performance & Design* Ch. 5 |
+| `aircraft_performance.py` | Thrust/power required vs available (piston-prop with Gagg–Ferrar lapse, electric, turbojet), stall speed, max speed (brentq), rate of climb, service/absolute ceiling, Breguet range & endurance (prop and jet) | Anderson *Intro. to Flight* Ch. 6; *Aircraft Performance & Design* Ch. 5 |
 | `sizing.py` | Constraint (matching) diagram: stall, cruise, climb, take-off ground roll, ceiling → design W/S and P/W; Raymer mission-fraction fuel sizing and take-off-mass fixed point | Raymer Ch. 3 (eqs. 3.4, 3.11, Table 3.2), Ch. 5; Gudmundsson Ch. 3 (eqs. 3-3, 3-4, 3-9) |
 | `rocket.py` | Tsiolkovsky Δv, mass ratio / propellant fraction / propellant for Δv, serial staging, thrust (momentum + pressure), ideal nozzle exit velocity, area ratio, C_F, c*, thrust-curve `Motor` model with consistent mass flow | Sutton & Biblarz 9th ed. eqs. 2-1, 2-3, 2-14, 3-16, 3-25, 3-30, 3-32, 4-6; NASA Glenn |
 | `trajectory.py` | 2-D point-mass launch (rail → zero-lift gravity turn), thrust + drag + gravity + variable mass, `solve_ivp` RK45 with apogee/impact events; fixed-step RK4 for cross-checks; analytic drag-free solution | Sutton §4.2–4.3 |
@@ -52,7 +52,7 @@ git clone https://github.com/Yousuf6273/aero-sizing-tool.git
 cd aero-sizing-tool
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
-pytest -q                                              # 47 tests, ~3 s
+pytest -q                                              # 43 tests, ~3 s
 python examples/run_all.py                             # prints results, writes figures/*.png
 jupyter notebook notebooks/walkthrough.ipynb           # optional
 ```
