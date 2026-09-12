@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>aerosizing — aircraft & rocket performance tool</title>
+<link rel="stylesheet" href="web/style.css">
+</head>
+<body>
+<header>
+  <h1>✈️🚀 aerosizing — aircraft performance, sizing & rocket trajectory</h1>
+  <p>Type in a vehicle or a mission, press <b>Run</b>, get performance numbers and plots. The physics is the standard
+  textbook set (Anderson, Raymer, Gudmundsson, Sutton, U.S. Standard Atmosphere 1976) and runs as real Python in your
+  browser. Hover any input for what it means. Source, equations and tests:
+  <a href="https://github.com/Yousuf6273/aero-sizing-tool">github.com/Yousuf6273/aero-sizing-tool</a>.</p>
+</header>
+<nav id="nav">
+  <button data-tab="aircraft" class="active">Aircraft performance</button>
+  <button data-tab="sizing">Size a new aircraft</button>
+  <button data-tab="rocket">Rocket trajectory</button>
+  <button data-tab="deltav">Rocket equation (Δv)</button>
+  <button data-tab="atmos">Standard atmosphere</button>
+</nav>
+<main>
+  <section class="tab active" id="tab-aircraft">
+    <div class="card">
+      <h2>Describe an existing aircraft</h2>
+      <p class="help">Given an aircraft's geometry, drag and engine, this computes stall speed, top speed, climb rate,
+      ceilings and Breguet range. Start from a preset, then change numbers.</p>
+      <div class="presets" data-for="aircraft"></div>
+      <form id="form-aircraft"></form>
+      <button class="run" data-run="aircraft">Run performance analysis</button>
+    </div>
+    <div class="card" id="out-aircraft"><div class="empty">Results will appear here.</div></div>
+  </section>
+  <section class="tab" id="tab-sizing">
+    <div class="card">
+      <h2>Describe the mission, get the aircraft</h2>
+      <p class="help">Enter what the aircraft must do. The tool builds a constraint diagram (Raymer / Gudmundsson) to
+      find the wing loading and power loading, then sizes the take-off mass, wing area and engine.</p>
+      <div class="presets" data-for="sizing"></div>
+      <form id="form-sizing"></form>
+      <button class="run" data-run="sizing">Run sizing</button>
+    </div>
+    <div class="card" id="out-sizing"><div class="empty">Results will appear here.</div></div>
+  </section>
+  <section class="tab" id="tab-rocket">
+    <div class="card">
+      <h2>Fly a rocket</h2>
+      <p class="help">Enter the airframe and motor (from the motor's catalogue page, e.g. thrustcurve.org). The flight is
+      integrated numerically with thrust, gravity and altitude-dependent drag.</p>
+      <div class="presets" data-for="rocket"></div>
+      <form id="form-rocket"></form>
+      <button class="run" data-run="rocket">Simulate launch</button>
+    </div>
+    <div class="card" id="out-rocket"><div class="empty">Results will appear here.</div></div>
+  </section>
+  <section class="tab" id="tab-deltav">
+    <div class="card">
+      <h2>Ideal rocket equation</h2>
+      <p class="help">Δv = Isp · g0 · ln(m0 / mf). Either compute Δv from masses, or the propellant needed for a target Δv.</p>
+      <div class="presets" data-for="deltav"></div>
+      <form id="form-deltav"></form>
+      <button class="run" data-run="deltav">Compute</button>
+    </div>
+    <div class="card" id="out-deltav"><div class="empty">Results will appear here.</div></div>
+  </section>
+  <section class="tab" id="tab-atmos">
+    <div class="card">
+      <h2>Standard atmosphere lookup</h2>
+      <p class="help">Temperature, pressure, density and speed of sound at any altitude up to 86 km (ISA / USSA-1976).</p>
+      <div class="presets" data-for="atmos"></div>
+      <form id="form-atmos"></form>
+      <button class="run" data-run="atmos">Look up</button>
+    </div>
+    <div class="card" id="out-atmos"><div class="empty">Results will appear here.</div></div>
+  </section>
+</main>
+<footer>Results are conceptual-level estimates (typically ±10–15 %). Assumptions and validity ranges are in the repository's <a href="https://github.com/Yousuf6273/aero-sizing-tool/blob/main/docs/theory.md">theory notes</a>.</footer>
+<div id="status"><span class="spin"></span><span id="status-text">Loading Python runtime (numpy, scipy, matplotlib) — about 10–20 s on first visit…</span></div>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script src="web/app.js"></script>
+</body>
+</html>
