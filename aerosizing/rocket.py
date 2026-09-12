@@ -162,18 +162,31 @@ class Motor:
     @classmethod
     def trapezoid(cls, name: str, total_impulse: float, burn_time: float, peak_thrust: float,
                   propellant_mass: float, casing_mass: float, t_rise: float = 0.1) -> "Motor":
-        """Idealised curve: linear rise to ``peak_thrust`` in ``t_rise``, then a linear
-        decay chosen so the total impulse matches. Useful when only the catalogue
-        values (I_t, t_b, F_peak) are known."""
-        # trapezoid: rise (0..t_rise) to F_p, linear to F_end at burn_time, 1 ms tail-off
-        # impulse = 0.5 F_p t_rise + 0.5 (F_p + F_end)(t_b - t_rise) + 0.5 F_end t_tail
+        """Idealised curve from catalogue values (I_t, t_b, F_peak): linear rise to
+        ``peak_thrust`` in ``t_rise``, then a linear decay chosen so the total impulse
+        matches. If the peak is too pronounced for a linear decay (typical of small
+        motors with an ignition spike, e.g. Estes C6), the curve becomes a spike that
+        decays over ``t_decay`` to a sustain level, held until burn-out."""
         t_tail = 1e-3
+        if peak_thrust * burn_time < total_impulse:
+            raise ValueError("peak_thrust is below the average thrust impulse/burn_time")
+        # shape 1: rise (0..t_rise) to F_p, linear to F_end at burn_time, 1 ms tail-off
+        # impulse = 0.5 F_p t_rise + 0.5 (F_p + F_end)(t_b - t_rise) + 0.5 F_end t_tail
         F_end = ((total_impulse - 0.5 * peak_thrust * t_rise - 0.5 * peak_thrust * (burn_time - t_rise))
                  / (0.5 * (burn_time - t_rise) + 0.5 * t_tail))
-        if F_end < 0:
+        if F_end >= 0:
+            t = np.array([0.0, t_rise, burn_time, burn_time + t_tail])
+            F = np.array([0.0, peak_thrust, F_end, 0.0])
+            return cls(name, t, F, propellant_mass, casing_mass)
+        # shape 2: spike to F_p, linear decay over t_decay to sustain F_s, constant to t_b
+        # impulse = 0.5 F_p t_rise + 0.5 (F_p + F_s) t_decay + F_s (t_b - t_rise - t_decay) + 0.5 F_s t_tail
+        t_decay = min(0.2, 0.5 * (burn_time - t_rise))
+        F_s = ((total_impulse - 0.5 * peak_thrust * t_rise - 0.5 * peak_thrust * t_decay)
+               / (0.5 * t_decay + (burn_time - t_rise - t_decay) + 0.5 * t_tail))
+        if F_s < 0:
             raise ValueError("peak_thrust too high for this impulse/burn time")
-        t = np.array([0.0, t_rise, burn_time, burn_time + t_tail])
-        F = np.array([0.0, peak_thrust, F_end, 0.0])
+        t = np.array([0.0, t_rise, t_rise + t_decay, burn_time, burn_time + t_tail])
+        F = np.array([0.0, peak_thrust, F_s, F_s, 0.0])
         return cls(name, t, F, propellant_mass, casing_mass)
 
     @property
