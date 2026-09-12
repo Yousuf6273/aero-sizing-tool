@@ -55,3 +55,43 @@ def test_jet_thrust_lapse():
     j = ap.Turbojet(10e3)
     assert j.thrust_available(100.0, density(0.0)) == pytest.approx(10e3)
     assert j.thrust_available(100.0, density(11000.0)) < 3.5e3
+
+
+@pytest.fixture
+def fighter_like():
+    """High thrust-to-weight jet: top speed lies well beyond 6x the stall speed,
+    which the adaptive speed bracket must still find."""
+    return ap.Aircraft("fighter", 27200.0, 52.49, 19.55 ** 2 / 52.49, 0.75, 0.024, 1.6,
+                       ap.Turbojet(186e3, 0.8), c_t=0.67 / 3600.0, fuel_mass=7348.0)
+
+
+def test_adaptive_bracket_finds_high_jet_top_speed(fighter_like):
+    V = ap.max_speed(fighter_like, 0.0)
+    assert V > 6.0 * ap.stall_speed(fighter_like, 0.0)      # beyond the old fixed bracket
+    assert ap.power_available(fighter_like, V, 0.0) == pytest.approx(
+        ap.power_required(fighter_like, V, 0.0), rel=1e-6)
+
+
+def test_jet_best_range_CL_is_below_LDmax_CL():
+    from aerosizing.aerodynamics import DragPolar
+    p = DragPolar(0.024, 7.28, 0.75)
+    assert p.CL_best_range_jet == pytest.approx(p.CL_LDmax / np.sqrt(3))
+    CL = np.linspace(0.05, 2.0, 20000)
+    f = np.sqrt(CL) / p.CD(CL)
+    assert p.CL_best_range_jet == pytest.approx(CL[np.argmax(f)], rel=2e-3)
+    assert p.CL_max_endurance_jet == p.CL_best_range_jet      # deprecated alias
+
+
+def test_jet_range_endurance_matches_closed_form(fighter_like):
+    ac = fighter_like
+    out = ap.jet_range_endurance(ac, 10000.0)
+    W0, W1 = ac.W, (ac.mass - ac.fuel_mass) * G0
+    assert out["endurance_s"] == pytest.approx(
+        ap.breguet_endurance_jet(ac.c_t, ac.polar.LD_max, W0, W1))
+    assert out["range_m"] > 0 and out["endurance_s"] > 0
+
+
+def test_performance_summary_uses_jet_breguet(fighter_like):
+    s = ap.performance_summary(fighter_like, 10000.0)
+    assert "range_m" in s and "endurance_s" in s
+    assert s["range_m"] == pytest.approx(ap.jet_range_endurance(fighter_like, 10000.0)["range_m"])

@@ -62,9 +62,19 @@ class DragPolar:
         return float(CL ** 1.5 / self.CD(CL))
 
     @property
-    def CL_max_endurance_jet(self) -> float:
-        """C_L maximising C_L^0.5/C_D (jet range): sqrt(C_D0/(3k))."""
+    def CL_best_range_jet(self) -> float:
+        """C_L maximising C_L^0.5/C_D, i.e. best *range* for a jet: sqrt(C_D0/(3k)).
+
+        (Anderson, *Intro. to Flight*, Sec. 6.12: jets cruise for range at
+        max C_L^0.5/C_D, and loiter for endurance at max L/D - the opposite way
+        round from propeller aircraft.)
+        """
         return float(np.sqrt(self.CD0 / (3.0 * self.k)))
+
+    @property
+    def CL_max_endurance_jet(self) -> float:
+        """Deprecated misnomer for :attr:`CL_best_range_jet`; kept for compatibility."""
+        return self.CL_best_range_jet
 
 
 def oswald_efficiency_straight_wing(AR: float) -> float:

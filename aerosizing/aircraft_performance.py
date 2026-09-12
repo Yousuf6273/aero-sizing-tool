@@ -148,11 +148,21 @@ def rate_of_climb(ac: Aircraft, V, h: float = 0.0, W: float | None = None):
     return (power_available(ac, V, h) - power_required(ac, V, h, W)) / W
 
 
-def _speed_bracket(ac: Aircraft, h: float, W: float):
-    """Speeds bracketing the P_A - P_R = 0 roots: from stall to a generous upper bound."""
+def _speed_bracket(ac: Aircraft, h: float, W: float, V_cap: float = 1200.0):
+    """Speeds bracketing the P_A - P_R = 0 roots.
+
+    Starts at the stall speed and expands the upper bound until the power available
+    falls below the power required (P_R grows as V^3 while jet P_A grows only as V,
+    so a crossing always exists). The expansion matters for high thrust-to-weight
+    jets, where the top speed can exceed six times the stall speed.
+    """
     V_lo = stall_speed(ac, h, W=W)
-    V_hi = 6.0 * V_lo
-    return V_lo, V_hi
+    V_hi = 2.0 * V_lo
+    while V_hi < V_cap:
+        if power_available(ac, V_hi, h) - power_required(ac, V_hi, h, W) < 0:
+            return V_lo, V_hi
+        V_hi *= 1.5
+    return V_lo, V_cap
 
 
 def max_rate_of_climb(ac: Aircraft, h: float = 0.0, W: float | None = None) -> tuple[float, float]:
@@ -164,7 +174,7 @@ def max_rate_of_climb(ac: Aircraft, h: float = 0.0, W: float | None = None) -> t
     """
     W = ac.W if W is None else W
     V_lo, V_hi = _speed_bracket(ac, h, W)
-    Vg = np.linspace(V_lo, V_hi, 200)
+    Vg = np.linspace(V_lo, V_hi, 400)
     rc = rate_of_climb(ac, Vg, h, W)
     i = int(np.argmax(rc))
     a = Vg[max(i - 1, 0)]
@@ -262,6 +272,22 @@ def prop_range_endurance(ac: Aircraft, h: float = 0.0, fuel_mass: float | None =
             "V_best_endurance_start": float(velocity_for_CL(W0, rho, CLe, ac.S))}
 
 
+def jet_range_endurance(ac: Aircraft, h: float = 0.0, fuel_mass: float | None = None) -> dict:
+    """Best-case Breguet range (at max C_L^0.5/C_D) and endurance (at (L/D)max) for a
+    jet burning ``fuel_mass`` kg at altitude ``h``. Anderson, Secs. 6.12-6.13."""
+    if ac.c_t is None:
+        raise ValueError("c_t required for jet Breguet estimates")
+    mf = ac.fuel_mass if fuel_mass is None else fuel_mass
+    W0, W1 = ac.W, (ac.mass - mf) * G0
+    rho = density(h)
+    CLr = ac.polar.CL_best_range_jet
+    R = breguet_range_jet(ac.c_t, CLr, ac.polar.CD(CLr), rho, ac.S, W0, W1)
+    E = breguet_endurance_jet(ac.c_t, ac.polar.LD_max, W0, W1)
+    return {"range_m": float(R), "endurance_s": float(E),
+            "V_best_range_start": float(velocity_for_CL(W0, rho, CLr, ac.S)),
+            "V_best_endurance_start": float(velocity_for_CL(W0, rho, ac.polar.CL_LDmax, ac.S))}
+
+
 def performance_summary(ac: Aircraft, h_cruise: float = 0.0) -> dict:
     """One-call summary used by the examples and notebook."""
     rc0, V_rc0 = max_rate_of_climb(ac, 0.0)
@@ -278,4 +304,6 @@ def performance_summary(ac: Aircraft, h_cruise: float = 0.0) -> dict:
     }
     if ac.c_p is not None and ac.fuel_mass > 0:
         out.update(prop_range_endurance(ac, h_cruise))
+    elif ac.c_t is not None and ac.fuel_mass > 0:
+        out.update(jet_range_endurance(ac, h_cruise))
     return out

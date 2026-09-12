@@ -30,25 +30,50 @@ def _png(fig):
 def run_aircraft(js):
     p = json.loads(js)
     AR = p["span"] ** 2 / p["S"]
-    c_p = p["sfc_kg_per_kWh"] / (1000.0 * 3600.0)
-    ac = ap.Aircraft(p["name"], p["mass"], p["S"], AR, p["e"], p["CD0"], p["CL_max"],
-                     ap.PistonProp(p["power_kW"] * 1e3, p["eta_p"]), c_p=c_p, fuel_mass=p["fuel_mass"])
+    jet = p.get("propulsion", "prop") == "jet"
+    if jet:
+        prop = ap.Turbojet(p["thrust_kN"] * 1e3, p["lapse_m"])
+        kw = {"c_t": p["tsfc_per_h"] / 3600.0}
+    else:
+        prop = ap.PistonProp(p["power_kW"] * 1e3, p["eta_p"])
+        kw = {"c_p": p["sfc_kg_per_kWh"] / (1000.0 * 3600.0)}
+    ac = ap.Aircraft(p["name"], p["mass"], p["S"], AR, p["e"], p["CD0"], p["CL_max"], prop,
+                     fuel_mass=p["fuel_mass"], **kw)
     s = ap.performance_summary(ac, p["h_cruise"])
+    a_sl = atm.isa(0.0).a
+    a_cr = atm.isa(p["h_cruise"]).a
+    M_sl = s["max_speed_SL_mps"] / a_sl
+    M_cr = s["max_speed_cruise_alt_mps"] / a_cr
     rows = [
         ["Stall speed (clean, sea level)", f"{s['stall_speed_SL_mps']:.1f} m/s", f"{s['stall_speed_SL_mps']*KT:.0f} kt"],
-        ["Max level speed (sea level)", f"{s['max_speed_SL_mps']:.1f} m/s", f"{s['max_speed_SL_mps']*KT:.0f} kt"],
-        [f"Max level speed at {p['h_cruise']:.0f} m", f"{s['max_speed_cruise_alt_mps']:.1f} m/s", f"{s['max_speed_cruise_alt_mps']*KT:.0f} kt"],
-        ["Max rate of climb (sea level)", f"{s['max_RC_SL_mps']:.2f} m/s", f"{s['max_RC_SL_mps']*FPM:.0f} ft/min at {s['V_for_max_RC_SL_mps']*KT:.0f} kt"],
+        ["Max level speed (sea level)", f"{s['max_speed_SL_mps']:.1f} m/s", f"{s['max_speed_SL_mps']*KT:.0f} kt · Mach {M_sl:.2f}"],
+        [f"Max level speed at {p['h_cruise']:.0f} m", f"{s['max_speed_cruise_alt_mps']:.1f} m/s", f"{s['max_speed_cruise_alt_mps']*KT:.0f} kt · Mach {M_cr:.2f}"],
+        ["Max rate of climb (sea level)", f"{s['max_RC_SL_mps']:.1f} m/s", f"{s['max_RC_SL_mps']*FPM:.0f} ft/min at {s['V_for_max_RC_SL_mps']*KT:.0f} kt"],
         ["Service ceiling (R/C = 0.5 m/s)", f"{s['service_ceiling_m']:.0f} m", f"{s['service_ceiling_m']*FT:.0f} ft"],
         ["Absolute ceiling", f"{s['absolute_ceiling_m']:.0f} m", f"{s['absolute_ceiling_m']*FT:.0f} ft"],
         ["(L/D)max", f"{s['LD_max']:.1f}", f"at {s['V_LDmax_SL_mps']*KT:.0f} kt (sea level)"],
     ]
     if "range_m" in s:
-        rows += [["Breguet range (best L/D, all fuel)", f"{s['range_m']/1e3:.0f} km", f"{s['range_m']/1852:.0f} nmi"],
-                 ["Breguet endurance (best C_L^1.5/C_D)", f"{s['endurance_s']/3600:.1f} h", ""]]
-    figs = [_png(plots.plot_drag_polar_and_LD(ac)), _png(plots.plot_power_curves(ac, (0.0, p["h_cruise"], min(2 * p["h_cruise"] + 1000, s["absolute_ceiling_m"] * 0.9)))),
+        best = "max C_L^0.5/C_D" if jet else "best L/D"
+        loit = "best L/D" if jet else "max C_L^1.5/C_D"
+        rows += [[f"Breguet range ({best}, all fuel)", f"{s['range_m']/1e3:.0f} km", f"{s['range_m']/1852:.0f} nmi"],
+                 [f"Breguet endurance ({loit})", f"{s['endurance_s']/3600:.1f} h", ""]]
+    warn = []
+    if max(M_sl, M_cr) > 0.7:
+        warn.append(f"Mach {max(M_sl, M_cr):.2f} is beyond this model's validity. The drag polar is "
+                    "incompressible (valid below about Mach 0.6-0.7) and has no wave drag, so top speed, "
+                    "climb rate and ceiling are OVER-predicted for transonic and supersonic aircraft. "
+                    "Treat the subsonic results (stall speed, L/D, loiter) as meaningful and the "
+                    "high-speed ones as an upper bound only.")
+    if jet and s["service_ceiling_m"] > 14000:
+        warn.append("Above roughly 14 km the simple thrust lapse and the missing compressibility drag both "
+                    "flatter the aircraft; the real service ceiling will be lower.")
+    figs = [_png(plots.plot_drag_polar_and_LD(ac)),
+            _png(plots.plot_power_curves(ac, (0.0, p["h_cruise"], min(2 * p["h_cruise"] + 1000, s["absolute_ceiling_m"] * 0.9)))),
             _png(plots.plot_climb(ac, s["absolute_ceiling_m"]))]
-    return json.dumps({"rows": rows, "figs": figs, "meta": f"AR = {AR:.2f}, W/S = {ac.wing_loading:.0f} N/m², k = {ac.polar.k:.4f}"})
+    tw = f", T/W = {p['thrust_kN']*1e3/ac.W:.2f}" if jet else ""
+    return json.dumps({"rows": rows, "figs": figs, "warnings": warn,
+                       "meta": f"AR = {AR:.2f}, W/S = {ac.wing_loading:.0f} N/m\u00b2, k = {ac.polar.k:.4f}{tw}"})
 
 
 def run_sizing(js):
@@ -88,13 +113,15 @@ def run_rocket(js):
         ["Drag-free apogee", f"{nodrag.apogee:.0f} m", f"drag costs {100*(1-res.apogee/nodrag.apogee):.0f} % of altitude"],
         ["Ballistic impact (no parachute)", f"{res.impact_range:.0f} m downrange" if res.impact_range is not None else "—", f"t = {res.t_impact:.1f} s" if res.t_impact else ""],
     ]
-    warn = ""
+    warn = []
     if m.average_thrust / (veh.liftoff_mass * G0) < 5:
-        warn = "Thrust-to-weight below 5: rail exit speed will be low; real launches want ≥ 5."
+        warn.append("Thrust-to-weight below 5: the rocket leaves the rail slowly and may weathercock. "
+                    "Real launches want at least 5.")
     if res.max_mach > 0.8:
-        warn += " Max Mach above 0.8: constant C_D is no longer valid (transonic drag rise not modelled)."
+        warn.append(f"Max Mach {res.max_mach:.2f}: a constant C_D is no longer valid, because the transonic "
+                    "drag rise is not modelled. The real apogee will be lower.")
     figs = [_png(plots.plot_thrust_curve(m)), _png(plots.plot_trajectory(res, veh.name))]
-    return json.dumps({"rows": rows, "figs": figs, "meta": warn})
+    return json.dumps({"rows": rows, "figs": figs, "meta": "", "warnings": warn})
 
 
 def run_deltav(js):
